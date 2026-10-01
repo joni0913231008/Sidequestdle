@@ -6,54 +6,52 @@ import { Button, RewardBadge, StatusBadge, useApp } from "../../lib";
 
 export default function QuestDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { quests, myQuests, submissions, acceptQuest, submitQuest, reviewSubmission } = useApp();
+  const { quests, myQuests, acceptQuest, submitQuest } = useApp();
   const router = useRouter();
 
   const [image, setImage] = useState<string | null>(null);
   const [comment, setComment] = useState("");
+  const [busy, setBusy] = useState(false);
 
   const quest = quests.find((q) => q.id === id);
   const userQuest = myQuests.find((m) => m.questId === id);
-  const pending = userQuest
-    ? submissions.find((x) => x.userQuestId === userQuest.id && x.status === "pending")
-    : undefined;
 
   if (!quest) {
     return <View style={s.center}><Text>Quest nicht gefunden</Text></View>;
   }
 
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      quality: 0.7,
-    });
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 0.7 });
     if (!result.canceled) setImage(result.assets[0].uri);
   };
 
-  const handleAccept = () => {
-    acceptQuest(quest.id);
+  const handleAccept = async () => {
+    setBusy(true);
+    const err = await acceptQuest(quest.id);
+    setBusy(false);
+    if (err) {
+      Alert.alert("Fehler", err);
+      return;
+    }
     router.replace("/my-quests" as any);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!userQuest) return;
     if (!image) {
       Alert.alert("Nachweis fehlt", "Bitte lade ein Foto als Nachweis hoch.");
       return;
     }
-    submitQuest(userQuest.id, image, comment);
+    setBusy(true);
+    const err = await submitQuest(userQuest.id, image, comment);
+    setBusy(false);
+    if (err) {
+      Alert.alert("Fehler", err);
+      return;
+    }
     setImage(null);
     setComment("");
     Alert.alert("Abgabe gesendet", "Deine Abgabe wird geprüft.");
-  };
-
-  const handleReview = (approved: boolean) => {
-    if (!pending) return;
-    reviewSubmission(pending.id, approved);
-    Alert.alert(
-      approved ? "Genehmigt" : "Abgelehnt",
-      approved ? `Du erhältst ${quest.reward} Coins.` : "Die Quest ist wieder aktiv, du kannst neu abgeben."
-    );
   };
 
   return (
@@ -69,7 +67,7 @@ export default function QuestDetail() {
       </View>
       <Text style={s.description}>{quest.description}</Text>
 
-      {!userQuest && <Button title="Quest annehmen" onPress={handleAccept} />}
+      {!userQuest && <Button title={busy ? "Bitte warten..." : "Quest annehmen"} onPress={handleAccept} />}
 
       {userQuest?.status === "accepted" && (
         <View style={s.form}>
@@ -83,19 +81,12 @@ export default function QuestDetail() {
             onChangeText={setComment}
             multiline
           />
-          <Button title="Abgabe senden" onPress={handleSubmit} />
+          <Button title={busy ? "Wird hochgeladen..." : "Abgabe senden"} onPress={handleSubmit} />
         </View>
       )}
 
-      {userQuest?.status === "submitted" && pending && (
-        <View style={s.form}>
-          <Text style={s.section}>Abgabe prüfen</Text>
-          <Image source={{ uri: pending.imageUrl }} style={s.preview} />
-          {!!pending.comment && <Text style={s.comment}>„{pending.comment}"</Text>}
-          <Text style={s.testHint}>Test-Modus: Hier wertest du manuell aus.</Text>
-          <Button title="Genehmigen" onPress={() => handleReview(true)} />
-          <Button title="Ablehnen" onPress={() => handleReview(false)} secondary />
-        </View>
+      {userQuest?.status === "submitted" && (
+        <Text style={s.info}>Deine Abgabe wurde eingereicht und wird geprüft.</Text>
       )}
 
       {userQuest?.status === "completed" && (
@@ -117,7 +108,5 @@ const s = StyleSheet.create({
   section: { fontSize: 18, fontWeight: "700", marginBottom: 8 },
   preview: { width: "100%", height: 200, borderRadius: 10, marginVertical: 8 },
   input: { backgroundColor: "#fff", borderWidth: 1, borderColor: "#e5e7eb", borderRadius: 10, padding: 12, minHeight: 80, marginVertical: 8, textAlignVertical: "top" },
-  comment: { fontStyle: "italic", marginBottom: 8 },
-  testHint: { color: "#6b7280", marginBottom: 4 },
   info: { color: "#4f46e5", fontWeight: "600", marginTop: 8 },
 });

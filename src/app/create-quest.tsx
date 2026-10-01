@@ -1,22 +1,21 @@
-// This component allows users to create a new quest by filling out a form with the necessary details, including title, description, category, location, reward, and an optional image. Upon submission, the quest is created and the user is navigated back to the previous screen.
 import { useState } from "react";
 import { Alert, Image, ScrollView, StyleSheet, Text, TextInput } from "react-native";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { Button, useApp } from "../lib";
-// Rendern der CreateQuest-Komponente
+
 export default function CreateQuest() {
   const { createQuest } = useApp();
   const router = useRouter();
 
-  // lokaler State, wie im Dokument
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   const [location, setLocation] = useState("");
   const [reward, setReward] = useState("10");
   const [image, setImage] = useState<string | null>(null);
-// Funktion zum Auswählen eines Bildes aus der Galerie
+  const [busy, setBusy] = useState(false);
+
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
@@ -24,19 +23,19 @@ export default function CreateQuest() {
     });
     if (!result.canceled) setImage(result.assets[0].uri);
   };
-// Funktion zum Erstellen der Quest
-  const handleCreate = () => {
+
+  const handleCreate = async () => {
     const rewardNumber = parseInt(reward, 10);
     if (!title.trim() || !description.trim() || !category.trim()) {
       Alert.alert("Angaben fehlen", "Titel, Beschreibung und Kategorie sind Pflicht.");
       return;
     }
-    // Validierung der Belohnung
     if (isNaN(rewardNumber) || rewardNumber <= 0) {
       Alert.alert("Ungültige Belohnung", "Die Belohnung muss eine Zahl über 0 sein.");
       return;
     }
-    createQuest({
+    setBusy(true);
+    const err = await createQuest({
       title: title.trim(),
       description: description.trim(),
       category: category.trim(),
@@ -46,9 +45,14 @@ export default function CreateQuest() {
       difficulty: "easy",
       duration: 30,
     });
+    setBusy(false);
+    if (err) {
+      Alert.alert("Fehler", err);
+      return;
+    }
     router.back();
   };
-// Rendern der Benutzeroberfläche
+
   return (
     <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
       <Text style={s.label}>Titel *</Text>
@@ -76,11 +80,11 @@ export default function CreateQuest() {
       <Button title={image ? "Bild ändern" : "Bild auswählen"} onPress={pickImage} secondary />
       {image && <Image source={{ uri: image }} style={s.preview} />}
 
-      <Button title="Quest erstellen" onPress={handleCreate} />
+      <Button title={busy ? "Wird erstellt..." : "Quest erstellen"} onPress={handleCreate} />
     </ScrollView>
   );
 }
-// Stile für die CreateQuest-Komponente
+
 const s = StyleSheet.create({
   content: { padding: 16 },
   label: { fontWeight: "600", marginTop: 12, marginBottom: 4 },
