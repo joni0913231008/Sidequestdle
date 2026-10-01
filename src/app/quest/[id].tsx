@@ -1,29 +1,27 @@
-// Die QuestDetail-Komponente zeigt die Details einer einzelnen Quest an und ermöglicht es dem Benutzer, die Quest anzunehmen oder abzugeben.
 import { useState } from "react";
 import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { Button, RewardBadge, StatusBadge, useApp } from "../../lib";
-// Rendern der QuestDetail-Komponente
+
 export default function QuestDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { quests, myQuests, acceptQuest, submitQuest } = useApp();
+  const { quests, myQuests, submissions, acceptQuest, submitQuest, reviewSubmission } = useApp();
   const router = useRouter();
 
-  // lokaler State fuer das Abgabe-Formular
-  // lokaler State fuer das Bild
   const [image, setImage] = useState<string | null>(null);
-// lokaler State fuer den Kommentar
   const [comment, setComment] = useState("");
-// Suche die Quest und den UserQuest-Eintrag basierend auf der ID
+
   const quest = quests.find((q) => q.id === id);
-// Suche den UserQuest-Eintrag für die aktuelle Quest
   const userQuest = myQuests.find((m) => m.questId === id);
+  const pending = userQuest
+    ? submissions.find((x) => x.userQuestId === userQuest.id && x.status === "pending")
+    : undefined;
 
   if (!quest) {
     return <View style={s.center}><Text>Quest nicht gefunden</Text></View>;
   }
-// Funktion zum Auswählen eines Bildes aus der Galerie
+
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
@@ -31,12 +29,12 @@ export default function QuestDetail() {
     });
     if (!result.canceled) setImage(result.assets[0].uri);
   };
-// Funktion zum Annehmen der Quest
+
   const handleAccept = () => {
     acceptQuest(quest.id);
     router.replace("/my-quests" as any);
   };
-// Funktion zum Einreichen der Quest
+
   const handleSubmit = () => {
     if (!userQuest) return;
     if (!image) {
@@ -44,11 +42,23 @@ export default function QuestDetail() {
       return;
     }
     submitQuest(userQuest.id, image, comment);
+    setImage(null);
+    setComment("");
     Alert.alert("Abgabe gesendet", "Deine Abgabe wird geprüft.");
   };
-// Rendern der Benutzeroberfläche
+
+  const handleReview = (approved: boolean) => {
+    if (!pending) return;
+    reviewSubmission(pending.id, approved);
+    Alert.alert(
+      approved ? "Genehmigt" : "Abgelehnt",
+      approved ? `Du erhältst ${quest.reward} Coins.` : "Die Quest ist wieder aktiv, du kannst neu abgeben."
+    );
+  };
+
   return (
     <ScrollView contentContainerStyle={s.content}>
+      {!!quest.imageUrl && <Image source={{ uri: quest.imageUrl }} style={s.hero} />}
       <Text style={s.title}>{quest.title}</Text>
       <Text style={s.meta}>
         {quest.category} · {quest.location} · {quest.duration} Min. · {quest.difficulty}
@@ -77,19 +87,28 @@ export default function QuestDetail() {
         </View>
       )}
 
-      {userQuest?.status === "submitted" && (
-        <Text style={s.info}>Deine Abgabe wurde eingereicht und wird geprüft.</Text>
+      {userQuest?.status === "submitted" && pending && (
+        <View style={s.form}>
+          <Text style={s.section}>Abgabe prüfen</Text>
+          <Image source={{ uri: pending.imageUrl }} style={s.preview} />
+          {!!pending.comment && <Text style={s.comment}>„{pending.comment}"</Text>}
+          <Text style={s.testHint}>Test-Modus: Hier wertest du manuell aus.</Text>
+          <Button title="Genehmigen" onPress={() => handleReview(true)} />
+          <Button title="Ablehnen" onPress={() => handleReview(false)} secondary />
+        </View>
       )}
+
       {userQuest?.status === "completed" && (
         <Text style={s.info}>Diese Quest ist abgeschlossen. 🎉</Text>
       )}
     </ScrollView>
   );
 }
-// Stile für die QuestDetail-Komponente
+
 const s = StyleSheet.create({
   content: { padding: 16 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  hero: { width: "100%", height: 200, borderRadius: 12, marginBottom: 12 },
   title: { fontSize: 24, fontWeight: "700" },
   meta: { color: "#6b7280", marginVertical: 6 },
   row: { flexDirection: "row", justifyContent: "space-between", marginBottom: 12 },
@@ -98,5 +117,7 @@ const s = StyleSheet.create({
   section: { fontSize: 18, fontWeight: "700", marginBottom: 8 },
   preview: { width: "100%", height: 200, borderRadius: 10, marginVertical: 8 },
   input: { backgroundColor: "#fff", borderWidth: 1, borderColor: "#e5e7eb", borderRadius: 10, padding: 12, minHeight: 80, marginVertical: 8, textAlignVertical: "top" },
+  comment: { fontStyle: "italic", marginBottom: 8 },
+  testHint: { color: "#6b7280", marginBottom: 4 },
   info: { color: "#4f46e5", fontWeight: "600", marginTop: 8 },
 });

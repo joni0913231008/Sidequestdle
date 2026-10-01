@@ -28,11 +28,11 @@ const TEST_USER: User = { id: "u1", username: "Demo", email: "demo@sidequest.app
 const TEST_QUESTS: Quest[] = [
   {
     id: "q1",
-    title: "Watermelon devourer",
+    title: "Watermelon devouerer",
     description: "Eat a watermelon whole in an hour",
     category: "food",
     location: "NA",
-    imageUrl: "https://picsum.photos/seed/q1/600/400",
+    imageUrl: "https://curiokids.net/wp-content/uploads/2019/12/UNE_past%C3%A8ques-carr%C3%A9es_curiokids-678x381.jpg.webp",
     reward: 15,
     difficulty: "normal",
     duration: 60,
@@ -46,17 +46,19 @@ type AppState = {
   user: User;
   quests: Quest[];
   myQuests: UserQuest[];
+  submissions: Submission[];
   loading: boolean;
   error: string | null;
   createQuest: (q: Omit<Quest, "id" | "creatorId" | "createdAt">) => void;
   acceptQuest: (questId: string) => void;
   submitQuest: (userQuestId: string, imageUrl: string, comment: string) => void;
+  reviewSubmission: (submissionId: string, approved: boolean) => void;
 };
 
 const AppContext = createContext<AppState | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [user] = useState(TEST_USER);
+  const [user, setUser] = useState(TEST_USER);
   const [quests, setQuests] = useState(TEST_QUESTS);
   const [myQuests, setMyQuests] = useState<UserQuest[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
@@ -85,8 +87,39 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setMyQuests((prev) => prev.map((m) => (m.id === userQuestId ? { ...m, status: "submitted" } : m)));
   };
 
+  // Auswertung: genehmigen oder ablehnen
+  const reviewSubmission = (submissionId: string, approved: boolean) => {
+    const sub = submissions.find((x) => x.id === submissionId);
+    if (!sub || sub.status !== "pending") return;
+
+    const userQuest = myQuests.find((m) => m.id === sub.userQuestId);
+    const quest = quests.find((q) => q.id === userQuest?.questId);
+
+    // 1. Abgabe markieren
+    setSubmissions((prev) =>
+      prev.map((x) => (x.id === submissionId ? { ...x, status: approved ? "approved" : "rejected" } : x))
+    );
+
+    // 2. Quest-Status setzen
+    setMyQuests((prev) =>
+      prev.map((m) => {
+        if (m.id !== sub.userQuestId) return m;
+        return approved
+          ? { ...m, status: "completed", completedAt: new Date().toISOString() }
+          : { ...m, status: "accepted" }; // zurück, damit neu abgegeben werden kann
+      })
+    );
+
+    // 3. Coins nur bei Genehmigung
+    if (approved && quest) {
+      setUser((u) => ({ ...u, coins: u.coins + quest.reward }));
+    }
+  };
+
   return (
-    <AppContext.Provider value={{ user, quests, myQuests, loading, error, createQuest, acceptQuest, submitQuest }}>
+    <AppContext.Provider
+      value={{ user, quests, myQuests, submissions, loading, error, createQuest, acceptQuest, submitQuest, reviewSubmission }}
+    >
       {children}
     </AppContext.Provider>
   );
