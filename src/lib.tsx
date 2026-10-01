@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { Link } from "expo-router";
+import { createContext, ReactNode, useContext, useState } from "react";
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 // ---------- Typen ----------
 export type User = { id: string; username: string; email: string; avatarUrl: string; coins: number };
@@ -26,10 +26,19 @@ export type Submission = {
 const TEST_USER: User = { id: "u1", username: "Demo", email: "demo@sidequest.app", avatarUrl: "", coins: 0 };
 
 const TEST_QUESTS: Quest[] = [
-  { id: "q1", title: "Stadtpark Clean-Up", description: "Sammle Müll im Stadtpark.", category: "Umwelt",
-    location: "Zürich", imageUrl: "", reward: 10, difficulty: "easy", duration: 30, creatorId: "u42", createdAt: "2026-09-30" },
-  { id: "q2", title: "Sonnenaufgang-Foto", description: "Fotografiere den Sonnenaufgang vom höchsten Punkt deiner Stadt.",
-    category: "Foto", location: "Zürich", imageUrl: "", reward: 15, difficulty: "medium", duration: 60, creatorId: "u42", createdAt: "2026-09-30" },
+  {
+    id: "q1",
+    title: "Watermelon devourer",
+    description: "Eat a watermelon whole in an hour",
+    category: "food",
+    location: "NA",
+    imageUrl: "https://picsum.photos/seed/q1/600/400",
+    reward: 15,
+    difficulty: "normal",
+    duration: 60,
+    creatorId: "u42",
+    createdAt: "2026-09-30",
+  },
 ];
 
 // ---------- Globaler State ----------
@@ -115,6 +124,7 @@ export function QuestCard({ quest }: { quest: Quest }) {
   return (
     <Link href={`/quest/${quest.id}` as any} asChild>
       <Pressable style={s.card}>
+        {!!quest.imageUrl && <Image source={{ uri: quest.imageUrl }} style={s.cardImage} />}
         <Text style={s.title}>{quest.title}</Text>
         <Text style={s.meta}>{quest.category} · {quest.location} · {quest.duration} Min.</Text>
         <RewardBadge reward={quest.reward} />
@@ -127,6 +137,7 @@ export function QuestList({ quests }: { quests: Quest[] }) {
   if (quests.length === 0) return <View style={s.center}><Text>Keine Quests gefunden</Text></View>;
   return <View>{quests.map((q) => <QuestCard key={q.id} quest={q} />)}</View>;
 }
+
 // ---------- Stile ----------
 const s = StyleSheet.create({
   button: { backgroundColor: "#4f46e5", padding: 14, borderRadius: 10, alignItems: "center", marginVertical: 6 },
@@ -134,6 +145,7 @@ const s = StyleSheet.create({
   buttonText: { color: "#fff", fontWeight: "600" },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24 },
   card: { backgroundColor: "#fff", padding: 16, borderRadius: 12, marginBottom: 12, borderWidth: 1, borderColor: "#e5e7eb" },
+  cardImage: { width: "100%", height: 150, borderRadius: 8, marginBottom: 10 },
   title: { fontSize: 17, fontWeight: "700" },
   meta: { color: "#6b7280", marginVertical: 4 },
   reward: { fontWeight: "600" },
