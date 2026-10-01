@@ -1,6 +1,8 @@
+// This is the root (layout) file for the `(tabs)` group. All routes defined in this folder will be rendered as children of this layout component.
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
+// This layout is shared across all routes defined in the `(tabs)` folder. You can add shared UI like a navigation bar here.
 export default function TabsLayout() {
   return (
     <Tabs screenOptions={{ tabBarActiveTintColor: "#4f46e5" }}>

@@ -1,9 +1,10 @@
+// This component allows users to create a new quest by filling out a form with the necessary details, including title, description, category, location, reward, and an optional image. Upon submission, the quest is created and the user is navigated back to the previous screen.
 import { useState } from "react";
 import { Alert, Image, ScrollView, StyleSheet, Text, TextInput } from "react-native";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { Button, useApp } from "../lib";
-
+// Rendern der CreateQuest-Komponente
 export default function CreateQuest() {
   const { createQuest } = useApp();
   const router = useRouter();
@@ -15,7 +16,7 @@ export default function CreateQuest() {
   const [location, setLocation] = useState("");
   const [reward, setReward] = useState("10");
   const [image, setImage] = useState<string | null>(null);
-
+// Funktion zum Auswählen eines Bildes aus der Galerie
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
@@ -23,13 +24,14 @@ export default function CreateQuest() {
     });
     if (!result.canceled) setImage(result.assets[0].uri);
   };
-
+// Funktion zum Erstellen der Quest
   const handleCreate = () => {
     const rewardNumber = parseInt(reward, 10);
     if (!title.trim() || !description.trim() || !category.trim()) {
       Alert.alert("Angaben fehlen", "Titel, Beschreibung und Kategorie sind Pflicht.");
       return;
     }
+    // Validierung der Belohnung
     if (isNaN(rewardNumber) || rewardNumber <= 0) {
       Alert.alert("Ungültige Belohnung", "Die Belohnung muss eine Zahl über 0 sein.");
       return;
@@ -46,7 +48,7 @@ export default function CreateQuest() {
     });
     router.back();
   };
-
+// Rendern der Benutzeroberfläche
   return (
     <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
       <Text style={s.label}>Titel *</Text>
@@ -78,7 +80,7 @@ export default function CreateQuest() {
     </ScrollView>
   );
 }
-
+// Stile für die CreateQuest-Komponente
 const s = StyleSheet.create({
   content: { padding: 16 },
   label: { fontWeight: "600", marginTop: 12, marginBottom: 4 },

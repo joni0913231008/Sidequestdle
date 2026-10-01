@@ -1,25 +1,29 @@
+// Die QuestDetail-Komponente zeigt die Details einer einzelnen Quest an und ermöglicht es dem Benutzer, die Quest anzunehmen oder abzugeben.
 import { useState } from "react";
 import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { Button, RewardBadge, StatusBadge, useApp } from "../../lib";
-
+// Rendern der QuestDetail-Komponente
 export default function QuestDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { quests, myQuests, acceptQuest, submitQuest } = useApp();
   const router = useRouter();
 
   // lokaler State fuer das Abgabe-Formular
+  // lokaler State fuer das Bild
   const [image, setImage] = useState<string | null>(null);
+// lokaler State fuer den Kommentar
   const [comment, setComment] = useState("");
-
+// Suche die Quest und den UserQuest-Eintrag basierend auf der ID
   const quest = quests.find((q) => q.id === id);
+// Suche den UserQuest-Eintrag für die aktuelle Quest
   const userQuest = myQuests.find((m) => m.questId === id);
 
   if (!quest) {
     return <View style={s.center}><Text>Quest nicht gefunden</Text></View>;
   }
-
+// Funktion zum Auswählen eines Bildes aus der Galerie
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
@@ -27,12 +31,12 @@ export default function QuestDetail() {
     });
     if (!result.canceled) setImage(result.assets[0].uri);
   };
-
+// Funktion zum Annehmen der Quest
   const handleAccept = () => {
     acceptQuest(quest.id);
     router.replace("/my-quests" as any);
   };
-
+// Funktion zum Einreichen der Quest
   const handleSubmit = () => {
     if (!userQuest) return;
     if (!image) {
@@ -42,7 +46,7 @@ export default function QuestDetail() {
     submitQuest(userQuest.id, image, comment);
     Alert.alert("Abgabe gesendet", "Deine Abgabe wird geprüft.");
   };
-
+// Rendern der Benutzeroberfläche
   return (
     <ScrollView contentContainerStyle={s.content}>
       <Text style={s.title}>{quest.title}</Text>
@@ -82,7 +86,7 @@ export default function QuestDetail() {
     </ScrollView>
   );
 }
-
+// Stile für die QuestDetail-Komponente
 const s = StyleSheet.create({
   content: { padding: 16 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },

@@ -1,9 +1,11 @@
+// Importiere die benötigten Hooks und Komponenten
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Button, Loading, QuestList, useApp } from "../../lib";
 
+// Die Home-Komponente zeigt die Liste der Quests an und ermöglicht das Filtern nach Kategorie und Suche
 export default function Home() {
   const { quests, loading, error } = useApp();
   const router = useRouter();
@@ -23,6 +25,7 @@ export default function Home() {
       q.title.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Rendern der Benutzeroberfläche
   return (
     <SafeAreaView style={s.screen} edges={["top"]}>
       <ScrollView contentContainerStyle={s.content}>
@@ -52,7 +55,7 @@ export default function Home() {
     </SafeAreaView>
   );
 }
-
+// Stile für die Home-Komponente
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#f9fafb" },
   content: { padding: 16 },

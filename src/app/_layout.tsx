@@ -1,3 +1,4 @@
+// This is the root (layout) file for the app. All routes defined in the app will be rendered as children of this layout component.
 import { Stack } from "expo-router";
 import { AppProvider } from "../lib";
 

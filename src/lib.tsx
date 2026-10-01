@@ -127,7 +127,7 @@ export function QuestList({ quests }: { quests: Quest[] }) {
   if (quests.length === 0) return <View style={s.center}><Text>Keine Quests gefunden</Text></View>;
   return <View>{quests.map((q) => <QuestCard key={q.id} quest={q} />)}</View>;
 }
-
+// ---------- Stile ----------
 const s = StyleSheet.create({
   button: { backgroundColor: "#4f46e5", padding: 14, borderRadius: 10, alignItems: "center", marginVertical: 6 },
   buttonSecondary: { backgroundColor: "#fff", borderWidth: 1, borderColor: "#4f46e5" },

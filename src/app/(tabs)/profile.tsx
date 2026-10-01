@@ -1,7 +1,8 @@
+// die Profil-Komponente zeigt die Benutzerinformationen und Statistiken an
 import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, useApp } from "../../lib";
-
+// Rendern der Profil-Komponente
 export default function Profile() {
   const { user, quests, myQuests } = useApp();
 
@@ -9,7 +10,7 @@ export default function Profile() {
   const accepted = myQuests.length;
   const submitted = myQuests.filter((m) => m.status === "submitted").length;
   const completed = myQuests.filter((m) => m.status === "completed").length;
-
+// Rendern der Benutzeroberfläche
   return (
     <SafeAreaView style={s.screen} edges={["top"]}>
       <ScrollView contentContainerStyle={s.content}>
@@ -46,7 +47,7 @@ export default function Profile() {
     </SafeAreaView>
   );
 }
-
+// Funktion für die Anzeige einzelner Statistiken
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <View style={s.stat}>
@@ -55,7 +56,7 @@ function Stat({ label, value }: { label: string; value: number }) {
     </View>
   );
 }
-
+// Stile für die Profil-Komponente
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#f9fafb" },
   content: { padding: 16 },
